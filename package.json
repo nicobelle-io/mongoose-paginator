@@ -1,0 +1,38 @@
+{
+  "name": "mongoose-paginator",
+  "version": "1.0.0",
+  "description": "Pagination plugin for ORM Mongoose",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/*.js -R spec -u bdd -s 30 -t 1000"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/raphaelfjesus/mongoose-paginator.git"
+  },
+  "keywords": [
+    "mongoose",
+    "mongodb",
+    "pagination",
+    "paginate",
+    "paging",
+    "page",
+    "sort",
+    "limit",
+    "plugin"
+  ],
+  "author": "Raphael F. Jesus <raphaelfjesus@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/raphaelfjesus/mongoose-paginator/issues"
+  },
+  "homepage": "https://github.com/raphaelfjesus/mongoose-paginator#readme",
+  "engines": {
+    "node": ">=0.12.9"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.4.5",
+    "mongoose": "^4.4.2"
+  }
+}
