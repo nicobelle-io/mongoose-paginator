@@ -1,13 +1,16 @@
 # mongoose-paginator
 
-[![Build Status](https://secure.travis-ci.org/raphaelfjesus/mongoose-paginator.png)](http://travis-ci.org/raphaelfjesus/mongoose-paginator)
+[![Build Status](https://travis-ci.org/raphaelfjesus/mongoose-paginator.svg?branch=master)](http://travis-ci.org/raphaelfjesus/mongoose-paginator)
+[![Code Climate](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator/badges/gpa.svg)](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator)
+[![Test Coverage](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator/badges/coverage.svg)](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator/coverage)
+[![Issue Count](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator/badges/issue_count.svg)](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator)
 
 An pagination plugin for ORM [mongoose.js]( http://mongoosejs.com/ ).
 
 ## Installation
 
-```sh
-npm install mongoose-paginator
+```bash
+$ npm install mongoose-paginator
 ```
 
 ## Usage
@@ -311,7 +314,7 @@ Model.paginate(criteria, options, function(err, result) {
 
 To run the test suite, first install the dependencies, then run npm test:
 
-```sh
+```bash
 $ npm install
 $ npm test
 ```
