@@ -5,7 +5,7 @@
 [![Test Coverage](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator/badges/coverage.svg)](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator/coverage)
 [![Issue Count](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator/badges/issue_count.svg)](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator)
 
-An pagination plugin for ORM [mongoose.js]( http://mongoosejs.com/ ).
+A pagination plugin for ORM [mongoose.js]( http://mongoosejs.com/ ).
 
 ## Installation
 
@@ -53,13 +53,13 @@ The `criteriaWrapper` option can be used to specify a criteria wrapper, adding c
 ```javascript
 // Set as default option for model
 schema.plugin(mongoosePaginator, {
-  criteria: { pathName: 'value' }, 
+  criteria: { pathName: 'value' },
   criteriaWrapper: function(criteria, callback) {
     // criteria output here: { pathName: 'value' }
-    
+
     criteria.deleted = false; // Avoid return the documents logically excluded
     // criteria output here: { pathName: 'value', deleted: false }
-    
+
     return callback(false, criteria);
   }
 });
@@ -73,40 +73,40 @@ The `convertCriteria` option can be used to specify a criteria converter.
 ```javascript
 // Set as default option for model
 schema.plugin(mongoosePaginator, {
-  
+
   // From request. Syntax of the Sencha ExtJS framework (front-end)
-  criteria: '[{"property":"pathName", "operator":"like", "value":"v"}]', 
-  
+  criteria: '[{"property":"pathName", "operator":"like", "value":"v"}]',
+
   convertCriteria: function(criteria, schema, callback) {
     // criteria output here: [{"property":"pathName", "operator":"like", "value":"v"}]
-    
+
     if(criteria && typeof criteria === 'string') {
       var filters = JSON.parse(criteria);
-      
+
       if(Array.isArray(filters)) {
         var filter;
         var result = {};
-        
+
         for(var i = 0, len = filters.length; i < len; i++) {
           filter = filters[i];
-          
+
           // ignore not paths mongoose
           if(!schema.path(filter.property)) {
             continue;
           }
-          
+
           if('like' === filter.operator) {
             result[filter.property] = new RegExp(filter.value, 'i');
-          
+
           } else {
             result[filter.property] = filter.value;
           }
         }
-      
+
         return callback(false, result);
       }
     }
-      
+
     return callback(false, criteria);
   }
 });
@@ -137,21 +137,21 @@ The `convertSorters` option can be used to specify a sorters converter.
 ```javascript
 // Set as default option for model
 schema.plugin(mongoosePaginator, {
-  
+
   // From request. Syntax of the Sencha ExtJS framework (front-end)
   sorters: '[{"property": "pathName", "direction": "DESC"}]',
-  
+
   convertSorters: function(sorters, callback) {
     if(sorters && typeof sorters === 'string') {
       var jsonSorters = JSON.parse(sorters);
-      
+
       if(Array.isArray(jsonSorters)) {
         var result = {};
         var sort;
-      
+
         for(var i = 0, len = jsonSorters.length; i < len; i++) {
           sort = jsonSorters[i];
-          
+
           if(sort.direction === 'DESC') {
             result[sort.property] = -1;
           } else if(sort.direction === 'ASC') {
@@ -160,11 +160,11 @@ schema.plugin(mongoosePaginator, {
             result[sort.property] = sort.direction;
           }
         }
-      
+
         return callback(false, result);
       }
     }
-    
+
     return callback(false, sorters);
   }
 });
@@ -178,7 +178,7 @@ The [select]( http://mongoosejs.com/docs/api.html#query_Query-select ) option ca
 ```javascript
 // Set as default option for model
 schema.plugin(mongoosePaginator, {
-  select: 'pathName1 pathName2' 
+  select: 'pathName1 pathName2'
 });
 
 // or
@@ -195,7 +195,7 @@ The [populate]( http://mongoosejs.com/docs/api.html#query_Query-populate ) optio
 ```javascript
 // Set as default option for model
 schema.plugin(mongoosePaginator, {
-  populate: { path: 'modelRef', select: 'pathName' } 
+  populate: { path: 'modelRef', select: 'pathName' }
 });
 
 // or
@@ -213,7 +213,7 @@ _NOTE:_ According Mongoose Docs, this is a great option in high-performance read
 ```javascript
 // Set as default option for model
 schema.plugin(mongoosePaginator, {
-  lean: true 
+  lean: true
 });
 
 // or
@@ -230,7 +230,7 @@ The [limit]( http://mongoosejs.com/docs/api.html#query_Query-limit ) option can 
 ```javascript
 // Set as default option for model
 schema.plugin(mongoosePaginator, {
-  limit: 20 
+  limit: 20
 });
 
 // or
@@ -247,7 +247,7 @@ The `maxLimit` option can be used to specify the maximum number of documents the
 ```javascript
 // Set as default option for model
 schema.plugin(mongoosePaginator, {
-  maxLimit: 100  
+  maxLimit: 100
 });
 
 // or
@@ -264,7 +264,7 @@ The [page]( http://mongoosejs.com/docs/api.html#query_Query-skip ) option can be
 ```javascript
 // Set as default option for model
 schema.plugin(mongoosePaginator, {
-  page: 1 
+  page: 1
 });
 
 // or
@@ -298,17 +298,25 @@ var options = {
 };
 
 Model.paginate(criteria, options, function(err, result) {
-  console.log(result); 
+  console.log(result);
   /*
-  { 
-    total: <Number>, 
-    limit: <Number>, 
+  {
+    total: <Number>,
+    limit: <Number>,
     page: <Number>,
-    data: <Document> 
+    data: <Document>
   }
   */
 });
 ```
+
+## Contributing
+
+1. Fork it ( https://github.com/raphaelfjesus/mongoose-paginator/fork )
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create a new Pull Request
 
 ## Tests
 
