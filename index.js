@@ -4,205 +4,132 @@
  * Methods.
  */
 
-// @private
-function buildOptions(options, callback) {
-  options = options || {};
-    
-  var convertSorters = function(sorters, callback) {
-    if(sorters && typeof sorters === 'string') { // Sencha ExtJS, my case
-      var jsonSorters = JSON.parse(sorters);
-      var result = {};
-      var sort;
-    
-      for(var i = 0, len = jsonSorters.length; i < len; i++) {
-        sort = jsonSorters[i];
-        
-        if(sort.direction !== 1 && sort.direction !== -1) {
-          sort.direction = sort.direction === 'DESC' || sort.direction === 'desc' ? -1 : 1;
-        }
-            
-        result[sort.property] = sort.direction;
-      }
-    
-      return callback(false, result);
-    }
-    
-    return callback(false, sorters);
+function buildOptions(methodOptions, schemaOptions, callback) {
+  methodOptions = methodOptions || {};
+  schemaOptions = schemaOptions || {};
+  
+  var options = {
+    maxLimit: methodOptions.maxLimit || schemaOptions.maxLimit,
+    limit: methodOptions.limit || schemaOptions.limit,
+    page: methodOptions.page || schemaOptions.page || 1,
+    lean: methodOptions.lean !== undefined ? methodOptions.lean : schemaOptions.lean === undefined, // Plain object, more peformance
+    select: methodOptions.select || schemaOptions.select || '',
+    populate: methodOptions.populate || schemaOptions.populate,
+    convertCriteria: methodOptions.convertCriteria || schemaOptions.convertCriteria || function convertCriteria(criteria, schema, callback) {
+      return callback(false, criteria);
+    }, 
+    criteriaWrapper: methodOptions.criteriaWrapper || schemaOptions.criteriaWrapper,
+    sort: methodOptions.sort || schemaOptions.sort,
+    convertSort: methodOptions.convertSort || schemaOptions.convertSort || function convertSort(sort, schema, callback) {
+      return callback(false, sort);
+    } 
   };
-    
-  var convertCriteria = function(criteria, schema, callback) {
-    if(criteria && typeof criteria === 'string') { // Sencha ExtJS, my case
-      var jsonCriteria = JSON.parse(criteria);
-      var result = {};
-      var predicate;
-      var schemaPath;
-      var existing;
-      
-      for(var i = 0, len = jsonCriteria.length; i < len; i++) {
-        predicate = jsonCriteria[i];
-        
-        // ignore not paths mongoose
-        schemaPath = schema.path(predicate.property);
-        if(!schemaPath) {
-          continue;
-        }
-        
-        // operator: 'like', '=', 'eq', 'gt', 'gte', 'lt', 'lte', 'in'
-        if('like' === predicate.operator) {
-          result[predicate.property] = new RegExp(predicate.value, 'i');
-        
-        } else if('lt' === predicate.operator) {
-          existing = result[predicate.property];
-          result[predicate.property] = existing && existing.$gt ? { $lt: predicate.value, $gt: existing.$gt } : { $lt: predicate.value };
-        
-        } else if('gt' === predicate.operator) {
-          existing = result[predicate.property];
-          result[predicate.property] = existing && existing.$lt ? { $gt: predicate.value, $lt: existing.$lt } : { $gt: predicate.value };
-        
-        } else if('lte' === predicate.operator) {
-          existing = result[predicate.property];
-          result[predicate.property] = existing && existing.$gte ? { $lte: predicate.value, $gte: existing.$gte } : { $lte: predicate.value };
-        
-        } else if('gte' === predicate.operator) {
-          existing = result[predicate.property];
-          result[predicate.property] = existing && existing.$lte ? { $gte: predicate.value, $lte: existing.$lte } : { $gte: predicate.value };
-        
-        } else if('in' === predicate.operator) {
-          result[predicate.property] = { $in: predicate.value };
-        
-        } else {
-          result[predicate.property] = predicate.value;
-        }
-      }
-    
-      return callback(false, result);
-    }
-      
-    return callback(false, criteria);
-  };
-    
-  var opts = {
-    maxLimit: options.maxLimit || 25,
-    limit: options.limit || 0,
-    page: options.page || 1,
-    lean: options.lean === undefined ? true : options.lean, // Plain object, more peformance
-    select: options.select || '',
-    populate: options.populate || '',
-    convertCriteria: options.convertCriteria || convertCriteria, 
-    criteriaWrapper: options.criteriaWrapper,
-    sorters: options.sorters || [],
-    convertSorters: options.convertSorters || convertSorters 
-  };
-    
-  if(typeof opts.convertSorters !== 'function') {
-    return callback(new Error('Option converterSorters is not a function.'));
+  
+  if(typeof options.convertSort !== 'function') {
+    return callback(new TypeError('ConvertSort is not a function.'));
   }
     
-  if(typeof opts.convertCriteria !== 'function') {
-    return callback(new Error('Option convertCriteria is not a function.'));
+  if(typeof options.convertCriteria !== 'function') {
+    return callback(new TypeError('ConvertCriteria is not a function.'));
   }
   
-  return callback(false, opts);
+  return callback(false, options);
 }
 
-// @private
 function buildSelect(select, callback) {
-  if(select && typeof select === 'function') {
-    return select(callback);
-  }
-  
-  return callback(false, select); // String/Object
+  return build(select, callback);
 }
 
-// @private
 function buildPopulate(populate, callback) {
-  if(populate && typeof populate === 'function') {
-    return populate(callback);
-  }
-  
-  return callback(false, populate);  // String/Object
+  return build(populate, callback);
 }
 
-// @private 
+function build(value, callback) {
+  if(value && typeof value === 'function') {
+    return value(callback);
+  }
+  
+  return callback(false, value);
+}
+
 function buildLimit(limit, maxLimit, callback) {
   if(limit && typeof limit === 'function') {
     return limit(maxLimit, callback);
   }
   
-  var newLimit = typeof limit !== 'undefined' && limit < maxLimit ? limit : maxLimit;
-  return callback(false, newLimit); // Number
+  if((limit && maxLimit && limit > maxLimit) || !limit) {
+    return callback(false, maxLimit);
+  }
+  
+  return callback(false, limit);
 }
 
-// @private
-function buildStart(page, limit, callback) {
+function buildSkip(page, limit, callback) {
   if(page && typeof page === 'function') {
     return page(limit, callback);
   }
   
-  var start = (page - 1) * limit;
-  return callback(false, start); // Number
+  var skip = (page - 1) * limit;
+  return callback(false, skip);
 }
 
-// @private
-function buildSorters(sorters, convertSorters, callback) {
-  convertSorters(sorters, function(err, convertedSorters) {
-    if(err) {
-      return callback(err);
-    }
-    
-    if(convertedSorters && typeof convertedSorters === 'object') {
-      return callback(false, convertedSorters);
-  
-    } else if(convertedSorters && typeof convertedSorters === 'function') {
-      return convertedSorters(callback);
-    }
-    
-    return callback(new Error('Type of sorters not supported.'));
-  });
+function buildSort(sort, convertSort, schema, callback) {
+  return convert(convertSort, sort, schema, callback);
 }
 
-// @private
 function buildCriteria(criteria, convertCriteria, schema, callback) {
-  convertCriteria(criteria, schema, function(err, convertedCriteria) {
+  return convert(convertCriteria, criteria, schema, callback);
+}
+
+function convert(converter, value, schema, callback) {
+  return converter(value, schema, function(err, convertedValue) {
     if(err) {
       return callback(err);
     }
     
-    if(convertedCriteria && typeof convertedCriteria === 'object') {
-      return callback(false, convertedCriteria);
-  
-    } else if(convertedCriteria && typeof convertedCriteria === 'function') {
-      return convertedCriteria(callback);
+    if(convertedValue && typeof convertedValue === 'object') {
+      return callback(false, convertedValue);
+    
+    } else if(convertedValue && typeof convertedValue === 'function') {
+      return convertedValue(callback);
     }
     
-    return callback(new Error('Type of criteria not supported.'));    
+    return callback(false, convertedValue);  
   });
 }
 
-// @private
 function buildCriteriaWrapper(criteriaWrapper, criteria, callback) {
   if(criteriaWrapper && typeof criteriaWrapper === 'function') {
     return criteriaWrapper(criteria, callback);
   }
   
-  return callback(false, criteria); // Object
+  return callback(false, criteria);
 }
 
-// @private
-function buildFind(model, select, populate, criteria, page, limit, start, sorters, lean, callback) {
-  model
+function buildFind(model, select, populate, criteria, page, limit, skip, sort, lean, callback) {
+  var query = model
   .find(criteria)
   .select(select)
-  .populate(populate)
   .lean(lean)
-  .sort(sorters)
-  .skip(start)
-  .limit(limit)
-  .exec(function (err, docs) {
+  .skip(skip);
+  
+  if(populate) {
+    query.populate(populate);
+  }
+  
+  if(sort) {
+    query.sort(sort);
+  }
+  
+  if(limit && limit > 0) {
+    query.limit(limit);
+  }
+  
+  query.exec(function (err, docs) {
     if (err) {
       return callback(err);
     }
-    
+
     if(!docs) {
       return callback(false, { total: 0, limit: limit, page: page, data: {} });
     }
@@ -212,21 +139,30 @@ function buildFind(model, select, populate, criteria, page, limit, start, sorter
         return callback(err);
       }
       
+      if(!limit || limit <= 0) {
+        limit = count;
+      }
+      
       callback(false, { total: count, limit: limit, page: page, data: docs });
     });
   });
 }
 
-module.exports = function(schema, defaultOptions) {
+module.exports = function(schema, schemaOptions) {
   schema.static('paginate', function(criteria, options, callback) {
     var model = this;
-
+    
+    if (typeof options === 'function') {
+      callback = options;
+      options = {};
+    }
+  
     // Callback hell
     // NOTE: 
     // - First version as simple as possible and compatible with all NodeJS versions!
     // - Check modules async.js e bluebird.js
-    // - Check syntax ECMAScript 6
-    return buildOptions(options, function(err, opts) {
+    // - Check ECMAScript 6
+    buildOptions(options, schemaOptions, function(err, opts) {
       if(err) {
         return callback(err);
       }
@@ -246,12 +182,12 @@ module.exports = function(schema, defaultOptions) {
               return callback(err);
             }
   
-            buildStart(opts.page, limit, function(err, start) {
+            buildSkip(opts.page, limit, function(err, skip) {
               if(err) {
                 return callback(err);
               }
               
-              buildSorters(opts.sorters, opts.convertSorters, function(err, sorters) {
+              buildSort(opts.sort, opts.convertSort, model.schema, function(err, sort) {
                 if(err) {
                   return callback(err);
                 }
@@ -266,7 +202,7 @@ module.exports = function(schema, defaultOptions) {
                       return callback(err);
                     }
                     
-                    buildFind(model, select, populate, wrappedCriteria, opts.page, limit, start, sorters, opts.lean, callback);
+                    buildFind(model, select, populate, wrappedCriteria, opts.page, limit, skip, sort, opts.lean, callback);
                   });
                 });
               });
