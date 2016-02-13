@@ -9,7 +9,7 @@ An pagination plugin for ORM [mongoose.js](http://mongoosejs.com/).
 ## Installation
 
 ```bash
-$ npm install mongoose-paginator
+$ npm install mongoose-paginator-simple
 ```
 
 ## Usage
@@ -17,7 +17,7 @@ $ npm install mongoose-paginator
 ```javascript
 // model.js
 var mongoose = require('mongoose');
-var mongoosePaginator = require('mongoose-paginator');
+var mongoosePaginator = require('mongoose-paginator-simple');
 
 var schema = new mongoose.Schema({ /* definition */ });
 schema.plugin(mongoosePaginator, { /* options for apply in all queries paging */ });
@@ -28,8 +28,8 @@ module.exports = mongoose.model('Model', schema);
 var Model = mongoose.model('ModelName');
 
 Model.paginate({ /* criteria */ }, { /* options for its use */ }, function(err, result) {
-	console.log(result);
-	/*{ 
+  console.log(result);
+  /*{ 
     total: <Number>, 
     limit: <Number>, 
     page: <Number>,
@@ -107,8 +107,8 @@ schema.plugin(mongoosePaginator, {
             criteria[filter.property] = filter.value;
           }
         }
-      
-	      // criteria output here: { pathName: new RegExp('v', 'i') }
+        
+        // criteria output here: { pathName: new RegExp('v', 'i') }
       }
     }
       
@@ -140,7 +140,6 @@ The `convertSort` option can be used to specify a sort converter.
 ```javascript
 // Set as default option for model
 schema.plugin(mongoosePaginator, {
-  
   // From request. Syntax of the Sencha ExtJS framework (front-end)
   sort: '[{"property": "pathName", "direction": "DESC"}]',
   
@@ -151,7 +150,7 @@ schema.plugin(mongoosePaginator, {
       if(Array.isArray(jsonSort)) {
         sort = {};
         
-		    var s;
+        var s;
         for(var i = 0, len = jsonSort.length; i < len; i++) {
           s = jsonSort[i];
           
@@ -288,13 +287,13 @@ module.export = mongoose.model('User', schema);
 ```javascript
 // model/customer.js
 var mongoose = require('mongoose');
-var mongoosePaginator = require('mongoose-paginator');
+var mongoosePaginator = require('mongoose-paginator-simple');
 
 var schema = new mongoose.Schema({
   name: String,
   deleted: {
     type: Boolean,
-	'default': false 
+    'default': false 
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId 
@@ -307,28 +306,27 @@ schema.plugin(mongoosePaginator, {
   maxLimit: 25,
   criteriaWrapper: function(criteria, callback) {
     criteria.deleted = false; // Exclusion logic documents
-	return callback(false, criteria);
+    return callback(false, criteria);
   },
   convertCriteria: function(criteria, schema, callback) {
     if(criteria && criteria.name) {
-	  criteria.name = new RegExp(criteria.name, 'i'); // Apply like
-	}
-	  
+      criteria.name = new RegExp(criteria.name, 'i'); // Apply like
+    }
+
     return callback(false, criteria);
   },
   convertSort: function(sort, callback) {
     if(sort) {
-	  for(var key in sort) {
-	    if('DESC' === sort[key]) {
-		  sort[key] = -1;
-		
-		} else if('ASC' === sort[key]) {
-		  sort[key] = 1;
-		}
-	  }
-	}
-	
-	return callback(false, sort);
+      for(var key in sort) {
+        if('DESC' === sort[key]) {
+          sort[key] = -1;
+        } else if('ASC' === sort[key]) {
+          sort[key] = 1;
+        }
+      }
+    }
+    
+    return callback(false, sort);
   }
 }); 
 
