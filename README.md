@@ -203,7 +203,7 @@ Model.paginate([criteria], { populate: 'pathName2' }, [callback]);
 
 ####`limit` _<[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)>_
 
-The [limit](http://mongoosejs.com/docs/api.html#query_Query-limit) option can be used to specify the maximum number of documents the query will return. **Default value:** *-1*
+The [limit](http://mongoosejs.com/docs/api.html#query_Query-limit) option can be used to specify the maximum number of documents the query will return. **Default value:** *undefined*
 > **NOTE:** Let -1 to not limit the number of documents to be returned. *(not recommended)*
 
 ```javascript
@@ -220,7 +220,7 @@ Model.paginate([criteria], { limit: 10 }, [callback]);
 
 ####`maxLimit` _<[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)>_
 
-The `maxLimit` option can be used to specify the maximum number of documents the query will return, when the `limit` option is setted from request, preventing overloading the application server with excessive use of memory. **Default value:** *25*
+The `maxLimit` option can be used to specify the maximum number of documents the query will return, when the `limit` option is setted from request, preventing overloading the application server with excessive use of memory. **Default value:** *undefined*
 
 ```javascript
 // Set as default option for model
@@ -334,25 +334,24 @@ schema.plugin(mongoosePaginator, {
 module.export = mongoose.model('Customer', schema);
 ```
 
->**Note:** To illustrate the examples, consider that there are 10 documents to the *Customer model* and 1 document to the *User model*, represented below:
+>**Note:** To illustrate the examples, consider that there are 10 documents to the __Customer model__ and 1 document to the __User model__, represented below:
 ```javascript
 // User model
 var allUsers = [
-  { _id: <ObjectId>, username: 'test', password: '123456' }
+  { _id: '<ObjectId>', username: 'test', password: '123456' }
 ];
-
 // Customer model
 var allCostumers = [
-  { _id: <ObjectId>, name: 'Customer 0', deleted: true, createdBy: <ObjectId> },
-  { _id: <ObjectId>, name: 'Customer 1', deleted: false, createdBy: <ObjectId> },
-  { _id: <ObjectId>, name: 'Customer 2', deleted: true, createdBy: <ObjectId> },
-  { _id: <ObjectId>, name: 'Customer 3', deleted: false, createdBy: <ObjectId> },
-  { _id: <ObjectId>, name: 'Customer 4', deleted: true, createdBy: <ObjectId> },
-  { _id: <ObjectId>, name: 'Customer 5', deleted: false, createdBy: <ObjectId> },
-  { _id: <ObjectId>, name: 'Customer 6', deleted: true, createdBy: <ObjectId> },
-  { _id: <ObjectId>, name: 'Customer 7', deleted: false, createdBy: <ObjectId> },
-  { _id: <ObjectId>, name: 'Customer 8', deleted: true, createdBy: <ObjectId> },
-  { _id: <ObjectId>, name: 'Customer 9', deleted: false, createdBy: <ObjectId> }
+  { _id: '<ObjectId>', name: 'Customer 0', deleted: true, createdBy: '<ObjectId>' },
+  { _id: '<ObjectId>', name: 'Customer 1', deleted: false, createdBy: '<ObjectId>' },
+  { _id: '<ObjectId>', name: 'Customer 2', deleted: true, createdBy: '<ObjectId>' },
+  { _id: '<ObjectId>', name: 'Customer 3', deleted: false, createdBy: '<ObjectId>' },
+  { _id: '<ObjectId>', name: 'Customer 4', deleted: true, createdBy: '<ObjectId>' },
+  { _id: '<ObjectId>', name: 'Customer 5', deleted: false, createdBy: '<ObjectId>' },
+  { _id: '<ObjectId>', name: 'Customer 6', deleted: true, createdBy: '<ObjectId>' },
+  { _id: '<ObjectId>', name: 'Customer 7', deleted: false, createdBy: '<ObjectId>' },
+  { _id: '<ObjectId>', name: 'Customer 8', deleted: true, createdBy: '<ObjectId>' },
+  { _id: '<ObjectId>', name: 'Customer 9', deleted: false, createdBy: '<ObjectId>' }
 ];
 ```
 
@@ -384,11 +383,11 @@ Output will be:
   page: 1,
   limit: 25,
   data: [
-  { _id: <ObjectId>, name: 'Customer 1', deleted: false, createdBy: <ObjectId> },
-	{ _id: <ObjectId>, name: 'Customer 3', deleted: false, createdBy: <ObjectId> },
-	{ _id: <ObjectId>, name: 'Customer 5', deleted: false, createdBy: <ObjectId> },
-	{ _id: <ObjectId>, name: 'Customer 7', deleted: false, createdBy: <ObjectId> },
-	{ _id: <ObjectId>, name: 'Customer 9', deleted: false, createdBy: <ObjectId> }
+  { _id: '<ObjectId>', name: 'Customer 1', deleted: false, createdBy: '<ObjectId>' },
+	{ _id: '<ObjectId>', name: 'Customer 3', deleted: false, createdBy: '<ObjectId>' },
+	{ _id: '<ObjectId>', name: 'Customer 5', deleted: false, createdBy: '<ObjectId>' },
+	{ _id: '<ObjectId>', name: 'Customer 7', deleted: false, createdBy: '<ObjectId>' },
+	{ _id: '<ObjectId>', name: 'Customer 9', deleted: false, createdBy: '<ObjectId>' }
   ]
 }
 ```
@@ -412,7 +411,7 @@ Output will be:
   page: 1,
   limit: 25,
   data: [
-    { _id: <ObjectId>, name: 'Customer 5', deleted: false, createdBy: <ObjectId> } 
+    { _id: '<ObjectId>', name: 'Customer 5', deleted: false, createdBy: '<ObjectId>' } 
   ]
 }
 ```
@@ -451,11 +450,11 @@ Output will be:
   page: 1,
   limit: 25,
   data: [
-  {  _id: <ObjectId>, name: 'Customer 9', createdBy: { username: 'test' } },
-	{  _id: <ObjectId>, name: 'Customer 7', createdBy: { username: 'test' } },
-	{  _id: <ObjectId>, name: 'Customer 5', createdBy: { username: 'test' } },
-	{  _id: <ObjectId>, name: 'Customer 3', createdBy: { username: 'test' } },
-	{  _id: <ObjectId>, name: 'Customer 1', createdBy: { username: 'test' } }
+  {  _id: '<ObjectId>', name: 'Customer 9', createdBy: { username: 'test' } },
+	{  _id: '<ObjectId>', name: 'Customer 7', createdBy: { username: 'test' } },
+	{  _id: '<ObjectId>', name: 'Customer 5', createdBy: { username: 'test' } },
+	{  _id: '<ObjectId>', name: 'Customer 3', createdBy: { username: 'test' } },
+	{  _id: '<ObjectId>', name: 'Customer 1', createdBy: { username: 'test' } }
   ]
 }
 ```
