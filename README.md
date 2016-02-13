@@ -41,10 +41,14 @@ Model.paginate({ /* criteria */ }, { /* options for its use */ }, function(err, 
 ### Paginate Criteria
 ####`criteria` _<[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)> mongodb selector_
 
-The [criteria](http://mongoosejs.com/docs/api.html#query_Query-find) can be used to filter the documents. **Default value:** *{}*
+The [criteria](http://mongoosejs.com/docs/api.html#query_Query-find) can be used to filter the documents. **Default value:** *undefined*
 
 ```javascript
 Model.paginate({ pathName: 'value' }, [option], [callback]);
+
+// or 
+
+Model.paginate({ pathName: 'value' }, [callback]);
 ```
 
 ### Paginate Options
@@ -159,8 +163,6 @@ schema.plugin(mongoosePaginator, {
             sort[s.property] = s.direction;
           }
         }
-      
-        return callback(false, sort);
       }
     }
     
@@ -204,7 +206,6 @@ Model.paginate([criteria], { populate: 'pathName2' }, [callback]);
 ####`limit` _<[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)>_
 
 The [limit](http://mongoosejs.com/docs/api.html#query_Query-limit) option can be used to specify the maximum number of documents the query will return. **Default value:** *undefined*
-> **NOTE:** Let -1 to not limit the number of documents to be returned. *(not recommended)*
 
 ```javascript
 // Set as default option for model
@@ -334,12 +335,13 @@ schema.plugin(mongoosePaginator, {
 module.export = mongoose.model('Customer', schema);
 ```
 
->**Note:** To illustrate the examples, consider that there are 10 documents to the __Customer model__ and 1 document to the __User model__, represented below:
+>**Note:** To illustrate the examples, consider that there are 10 documents to the _Customer model_ and 1 document to the _User model_, represented below:
 ```javascript
 // User model
 var allUsers = [
   { _id: '<ObjectId>', username: 'test', password: '123456' }
 ];
+
 // Customer model
 var allCostumers = [
   { _id: '<ObjectId>', name: 'Customer 0', deleted: true, createdBy: '<ObjectId>' },
@@ -383,11 +385,11 @@ Output will be:
   page: 1,
   limit: 25,
   data: [
-  { _id: '<ObjectId>', name: 'Customer 1', deleted: false, createdBy: '<ObjectId>' },
-	{ _id: '<ObjectId>', name: 'Customer 3', deleted: false, createdBy: '<ObjectId>' },
-	{ _id: '<ObjectId>', name: 'Customer 5', deleted: false, createdBy: '<ObjectId>' },
-	{ _id: '<ObjectId>', name: 'Customer 7', deleted: false, createdBy: '<ObjectId>' },
-	{ _id: '<ObjectId>', name: 'Customer 9', deleted: false, createdBy: '<ObjectId>' }
+    { _id: '<ObjectId>', name: 'Customer 1', deleted: false, createdBy: '<ObjectId>' },
+    { _id: '<ObjectId>', name: 'Customer 3', deleted: false, createdBy: '<ObjectId>' },
+    { _id: '<ObjectId>', name: 'Customer 5', deleted: false, createdBy: '<ObjectId>' },
+    { _id: '<ObjectId>', name: 'Customer 7', deleted: false, createdBy: '<ObjectId>' },
+    { _id: '<ObjectId>', name: 'Customer 9', deleted: false, createdBy: '<ObjectId>' }
   ]
 }
 ```
@@ -450,11 +452,11 @@ Output will be:
   page: 1,
   limit: 25,
   data: [
-  {  _id: '<ObjectId>', name: 'Customer 9', createdBy: { username: 'test' } },
-	{  _id: '<ObjectId>', name: 'Customer 7', createdBy: { username: 'test' } },
-	{  _id: '<ObjectId>', name: 'Customer 5', createdBy: { username: 'test' } },
-	{  _id: '<ObjectId>', name: 'Customer 3', createdBy: { username: 'test' } },
-	{  _id: '<ObjectId>', name: 'Customer 1', createdBy: { username: 'test' } }
+    {  _id: '<ObjectId>', name: 'Customer 9', createdBy: { username: 'test' } },
+    {  _id: '<ObjectId>', name: 'Customer 7', createdBy: { username: 'test' } },
+    {  _id: '<ObjectId>', name: 'Customer 5', createdBy: { username: 'test' } },
+    {  _id: '<ObjectId>', name: 'Customer 3', createdBy: { username: 'test' } },
+    {  _id: '<ObjectId>', name: 'Customer 1', createdBy: { username: 'test' } }
   ]
 }
 ```
