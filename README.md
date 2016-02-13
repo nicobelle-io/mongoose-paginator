@@ -425,7 +425,7 @@ Output will be:
 var mongoose = require('mongoose');
 var Customer = mongoose.model('Customer');
 
-// It will be converted to a regex, as defined in the converter model
+// It will be converted to a regex, as defined in the converter model 
 var criteria = { 
   name: 'Cust' 
 };
