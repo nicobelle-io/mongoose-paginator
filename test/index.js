@@ -302,8 +302,6 @@ describe('Paginator plugin for ORM Mongoose', function () {
                         sort[s.property] = s.direction;
                       }
                     }
-                  
-                    return callback(false, sort);
                   }
                 }
                 
