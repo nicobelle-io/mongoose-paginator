@@ -341,7 +341,6 @@ module.export = mongoose.model('Customer', schema);
 var allUsers = [
   { _id: '<ObjectId>', username: 'test', password: '123456' }
 ];
-
 // Customer model
 var allCostumers = [
   { _id: '<ObjectId>', name: 'Customer 0', deleted: true, createdBy: '<ObjectId>' },
