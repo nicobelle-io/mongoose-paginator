@@ -288,7 +288,7 @@ describe('Paginator plugin for ORM Mongoose', function () {
                   var jsonSort = JSON.parse(sort);
                   
                   if(Array.isArray(jsonSort)) {
-                    sort = {};
+                    sort = {}; 
                     
             		    var s;
                     for(var i = 0, len = jsonSort.length; i < len; i++) {
