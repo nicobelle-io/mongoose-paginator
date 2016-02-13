@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha test/*.js -R spec -u bdd -s 30 -t 1000",
-    "coverage": "istanbul cover _mocha" 
+    "coverage": "istanbul cover _mocha"
   },
   "repository": {
     "type": "git",
@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
+    "istanbul": "^0.4.2",
     "mocha": "^2.4.5",
     "mongoose": "^4.4.2"
   }
