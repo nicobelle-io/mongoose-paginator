@@ -54,7 +54,7 @@ var defaultOptions = {
     callback(false, sorters);
   }
 };
-CustomerSchema.plugin(mongoosePaginator, defaultOptions);
+CustomerSchema.plugin(mongoosePaginator, {});
 var Customer = mongoose.model('Customer', CustomerSchema);
 
 /**
@@ -95,405 +95,411 @@ describe('Paginator plugin for ORM Mongoose', function () {
     });
   });
   
-  describe('paginate', function() {
-    it('should return the documents when criteria and custom options not are present', function(done) {
-      Customer.paginate({}, {}, function(err, result) {
-        expect(err).to.equal(false);
-        expect(result.total).to.equal(10);
-        expect(result.limit).to.equal(0);
-        expect(result.page).to.equal(1);
-        expect(result.data).to.have.length(10);
-      
-        done();
-      });
-    });
+  describe('#paginate()', function() {
     
-    it('should return the documents when criteria are present', function(done) {
-      Customer.paginate({ name: 'Customer 5' }, {}, function(err, result) {
-        expect(err).to.equal(false);
-        expect(result.total).to.equal(1);
-        expect(result.limit).to.equal(0);
-        expect(result.page).to.equal(1);
-        expect(result.data).to.have.length(1);
-        expect(result.data[0].name).to.equal('Customer 5');
+    describe('parameter [criteria]', function() {
       
-        done();
-      });
-    });
-  
-    it('should return the documents when criteria and all custom options are present', function(done) {
-      var criteria = { deleted: true };
-      var options = { 
-        maxLimit: 4, 
-        limit: 10, 
-        page: 1, 
-        lean: true, 
-        select: 'name createdBy', 
-        populate: { 
-          path: 'createdBy', 
-          select: 'username' 
-        }, 
-        convertCriteria: function(criteria, schema, callback) {
-          callback(false, criteria);
-        },
-        criteriaWrapper: function(criteria, callback) {
-          callback(false, criteria);
-        },
-        sorters: { 
-          name: 'DESC' 
-        },
-        convertSorters: function(sorters, callback) {
-          if(sorters.name) {
-            return callback(false, { name: sorters.name === 'DESC' ? -1 : 1 });
-          }
-          
-          return callback(false, sorters);
-        }
-      };
-      
-      Customer.paginate(criteria, options, function(err, result) {
-        expect(err).to.equal(false);
-        expect(result.total).to.equal(5);
-        expect(result.limit).to.equal(4);
-        expect(result.page).to.equal(1);
-        expect(result.data).to.have.length(4);
-        expect(result.data[0]).to.have.all.keys('name', 'createdBy', '_id');
-        expect(result.data[0].createdBy.username).to.equal('test');
-      
-        done();
-      });
-    });
-  });
-  
-  describe('options', function() {
-    it('should apply only out of schema when present in paginate method', function(done) {
-      var options = {
-        select: 'name createdBy',
-        populate: { path: 'createdBy', select: 'username' },
-        lean: true,
-        page: 1,
-        limit: 5,
-        maxLimit: 10,
-        criteriaWrapper: undefined,
-        convertCriteria: undefined,
-        sorters: {},
-        convertSorters: undefined 
-      };
-      
-      Customer.paginate({}, options, function(err, result) {
-        expect(err).to.equal(false);
-        expect(result.page).to.equal(1);
-        expect(result.limit).to.equal(5);
-        expect(result.total).to.equal(10);
-        expect(result.data).to.have.length(5);
-        expect(result.data[0]).to.have.all.keys('name', 'createdBy', '_id');
-        expect(result.data[0].createdBy.username).to.equal('test');
+      describe('when not present', function() {
+        it('should not throw or return an error', function(done) {
+          Customer.paginate({}, {}, function(err, result) {
+            expect(err).to.not.be.ok;
+            
+            done();
+          });
+        });
         
-        expect(defaultOptions.select).to.be.empty;
-        expect(defaultOptions.populate).to.be.empty;
-        expect(defaultOptions.lean).to.be.true;
-        expect(defaultOptions.page).to.equal(1);
-        expect(defaultOptions.limit).to.equal(0);
-        expect(defaultOptions.maxLimit).to.equal(25);
-        expect(defaultOptions.criteriaWrapper).to.be.undefined;
-        expect(defaultOptions.convertCriteria).to.be.a('function');
-        expect(defaultOptions.sorters).to.be.empty;
-        expect(defaultOptions.convertSorters).to.be.a('function');
-
-        done();
+        it('should return all the documents', function(done) {
+          Customer.paginate({}, {}, function(err, result) {
+            expect(result).to.exist;
+            expect(result.data).to.have.length(QTY_MOCK_MODELS);
+            expect(result.total).to.equal(QTY_MOCK_MODELS);
+            expect(result.limit).to.equal(QTY_MOCK_MODELS);
+            expect(result.page).to.equal(1);
+            
+            done();
+          });
+        });
       });
-    });
       
-    describe('option select', function() {
-      it('should return all properties when not present', function(done) {
-        var options = {
-          select: undefined 
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data[0]).to.have.all.keys('name', 'date', 'deleted', 'createdBy', '__v', '_id');
-  
-          done();
-        });
-      });
-    
-      it('should return none when property not exist', function(done) {
-        var options = {
-          select: 'xxxx' 
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data[0]).to.have.all.keys('_id');
-  
-          done();
-        });
-      });
-    
-      it('should return selected properties when present', function(done) {
-        var options = {
-          select: 'name' 
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data[0]).to.have.all.keys('name', '_id');
-  
-          done();
-        });
-      });
-    
-      it('should return selected properties when is function', function(done) {
-        var options = {
-          select: function(callback) {
-              callback(false, 'date');
-          } 
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data[0]).to.have.all.keys('date', '_id');
-  
-          done();
-        });
-      });
-    });
-  
-    describe('option populate', function() {
-      it('should return only properties without reference when not present', function(done) {
-        var options = {
-          populate: undefined 
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data[0].createdBy).to.not.contain.any.keys('username');
-  
-          done();
-        });
-      });
-    
-      it('should return none property with reference when property not exist', function(done) {
-        var options = {
-          populate: 'xxxx' 
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data[0].createdBy).to.not.contain.any.keys('username');
-  
-          done();
-        });
-      });
-    
-      it('should return properties with reference when present', function(done) {
-        var options = {
-          populate: { path: 'createdBy', select: 'username' } 
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data[0].createdBy).to.contain.any.keys('username');
-  
-          done();
-        });
-      });
-    
-      it('should return properties with reference when is function', function(done) {
-        var options = {
-          populate: function(callback) {
-            callback(false, { path: 'createdBy', select: 'username' });
-          } 
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data[0].createdBy).to.contain.any.keys('username');
-  
-          done();
-        });
-      });
-    });
-    
-    describe('option limit', function() {
-      it('should return all documents when not present', function(done) {
-        var options = {
-          limit: undefined  
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data).to.have.length(QTY_MOCK_MODELS);
-  
-          done();
-        });
-      });
-    
-      it('should return all documents when less than or equal to zero', function(done) {
-        var options = {
-          limit: 0  
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data).to.have.length(QTY_MOCK_MODELS);
-  
-          done();
-        });
-      });
-    
-      it('should return the documents (quantity less or equal) when greater than zero', function(done) {
-        var options = {
-          limit: 5  
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data).to.have.length(5);
-  
-          done();
-        });
-      });
-    });
-  
-    describe('option sorters', function() {
-      it('should return documents without sort when not present', function(done) {
-        var options = {
-          sorters: undefined 
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data).to.have.length(QTY_MOCK_MODELS);
-  
-          done();
-        });
-      });
-    
-      it('should return documents without sort when property not exist', function(done) {
-        var options = {
-          sorters: { x: 1 } 
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data).to.have.length(QTY_MOCK_MODELS);
-  
-          done();
-        });
-      });
-    
-      it('should return documents sorted (ASC) when present', function(done) {
-        var options = {
-          sorters: { name: 1 } 
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data[0].name).to.contain('0');
-  
-          done();
-        });
-      });
-    
-      it('should return documents sorted (DESC) when present', function(done) {
-        var options = {
-          sorters: { name: -1 } 
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data[0].name).to.contain('9');
-  
-          done();
-        });
-      });
-    
-      it('should return documents sorted when is function', function(done) {
-        var options = {
-          sorters: function(callback) {
-            callback(false, { name: 1 });
-          } 
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data[0].name).to.contain('0');
-  
-          done();
-        });
-      });
-    
-      it('should return documents sorted when is string (JSON)', function(done) {
-        var options = {
-          sorters: '{"name": 1}' 
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data[0].name).to.contain('0');
-  
-          done();
-        });
-      });
-    });
-  
-    describe('option convertSorters', function() {
-      it('should use default convert when not present', function(done) {
-        var options = {
-          sorters: '[{"property": "name", "direction": "DESC"}]',
-          convertSorters: undefined 
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data[0].name).to.contain('9');
-  
-          done();
-        });
-      });
-    
-      it('should throw exception when present and is not a function', function(done) {
-        var options = {
-          convertSorters: { x: 1 } 
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.exist;
-  
-          done();
-        });
-      });
-    
-      it('should convert sorters when present and is a function', function(done) {
-        var options = {
-          sorters: { any: -1 },
-          convertSorters: function(sorters, callback) {
-            if(sorters.hasOwnProperty('any')) {
-              return callback(false, { name: sorters.any });
-            }
+      describe('when present', function() {
+        it('should return the documents matching', function(done) {
+          Customer.paginate({ name: 'Customer 5' }, {}, function(err, result) {
+            expect(result).to.exist;
+            expect(result.data).to.have.length(1);
+            expect(result.total).to.equal(1);
+            expect(result.limit).to.equal(1);
+            expect(result.page).to.equal(1);
             
-            return callback(false, { name: 1 });
-          }
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data[0].name).to.contain('9');
-  
-          done();
+            done();
+          });
         });
       });
     });
-  
-    describe('option criteriaWrapper', function() {
-      it('should execute without problem when not present', function(done) {
-        var options = {
-          criteriaWrapper: undefined 
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data).to.have.length(QTY_MOCK_MODELS);
-  
-          done();
+    
+    describe('parameter [options]', function() {
+      
+      describe('when not present', function() {
+        it('should not throw or return an error', function(done) {
+          Customer.paginate({ deleted: true }, {}, function(err, result) {
+            expect(err).to.not.be.ok;
+            
+            done();
+          });
+        });
+        
+        it('should return the documents considering the default options', function(done) {
+          Customer.paginate({ deleted: false }, function(err, result) {
+            expect(result).to.exist;
+            expect(result.data).to.have.length(5);
+            expect(result.total).to.equal(5);
+            expect(result.limit).to.equal(5);
+            expect(result.page).to.equal(1);
+            
+            done();
+          });
         });
       });
-    
-      it('should execute without problem when present', function(done) {
-        var options = {
-          criteriaWrapper: function(criteria, callback) {
-            // Ignore excluded documents logically
-            criteria.deleted = false;
-            
-            callback(false, criteria);
-          }
-        };
-        Customer.paginate({}, options, function(err, result) {
-          expect(err).to.equal(false);
-          expect(result.data).to.have.length(5);
-  
-          done();
+      
+      describe('when present', function() {
+
+        describe('[options.criteriaWrapper]', function() {
+          it('should throw exception if is not a function', function(done) {
+            Customer.paginate({ name: { $in: ['Customer 0', 'Customer 2', 'Customer 4', 'Customer 5', 'Customer 7' ] }, deleted: true }, { criteriaWrapper: 'not function' }, function(err, result) {
+              expect(err).to.exist;
+      
+              done();
+            });
+          });
+          
+          it('should execute without problems if is a function', function(done) {
+            var options = {
+              criteriaWrapper: function(criteria, callback) {
+                criteria.deleted = false;
+                
+                callback(false, criteria);
+              }
+            };
+            Customer.paginate({ name: { $in: ['Customer 0', 'Customer 2', 'Customer 5', 'Customer 7', 'Customer 8' ] }}, options, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data).to.have.length(2);
+      
+              done();
+            });
+          });
+        });
+        
+        describe('[options.convertCriteria]', function() {
+          it('should throw exception if is not a function', function(done) {
+            Customer.paginate({ name: 'Customer 4' }, { convertCriteria: 'not function' }, function(err, result) {
+              expect(err).to.exist;
+      
+              done();
+            });
+          });
+          
+          it('should convert without problems if is a function', function(done) {
+            var options = {
+              convertCriteria: function(criteria, schema, callback) {
+                if(criteria && typeof criteria === 'string') {
+                  var filters = JSON.parse(criteria);
+                  
+                  if(Array.isArray(filters)) {
+                    var filter;
+                    criteria = {};
+                    
+                    for(var i = 0, len = filters.length; i < len; i++) {
+                      filter = filters[i];
+                      
+                      // ignore not paths mongoose
+                      if(!schema.path(filter.property)) {
+                        continue;
+                      }
+                      
+                      if('like' === filter.operator) {
+                        criteria[filter.property] = new RegExp(filter.value, 'i');
+                      
+                      } else {
+                        criteria[filter.property] = filter.value;
+                      }
+                    }
+                  }
+                }
+                  
+                return callback(false, criteria);
+              }
+            };
+            Customer.paginate('[{"property":"name", "operator":"like", "value":"3"}]', options, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data).to.have.length(1);
+      
+              done();
+            });
+          });
+        });
+        
+        describe('[options.sort]', function() {
+          it('should return the documents without ordering if property not exists', function(done) {
+            Customer.paginate({ $or: [ { name: 'Customer 0' }, { name: 'Customer 1' }, { name: 'Customer 2' } ] }, { sort: '-xxxx' }, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data[0].name).to.not.contain('2');
+      
+              done();
+            });
+          });
+          
+          it('should return the documents sorted if property exists', function(done) {
+            Customer.paginate({}, { sort: { name: -1 } }, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data[0].name).to.contain('9');
+      
+              done();
+            });
+          });
+          
+          it('should return the documents sorted if is a function', function(done) {
+            var options = {
+              sort: function(callback) {
+                  callback(false, { name: 'desc' });
+              } 
+            };
+            Customer.paginate({ deleted: true }, options, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data[0].name).to.contain('8');
+      
+              done();
+            });
+          });
+        });
+        
+        describe('[options.convertSort]', function() {
+          it('should throw exception if is not a function', function(done) {
+            Customer.paginate({ name: { $not: { $in: ['Customer 9', 'Customer 8'] } } }, { convertSort: 'not function' }, function(err, result) {
+              expect(err).to.exist;
+      
+              done();
+            });
+          });
+          
+          it('should convert without problems if is a function', function(done) {
+            var options = {
+              sort: '[{"property": "name", "direction": "DESC"}]',
+              convertSort: function(sort, schema, callback) {
+                if(sort && typeof sort === 'string') {
+                  var jsonSort = JSON.parse(sort);
+                  
+                  if(Array.isArray(jsonSort)) {
+                    sort = {};
+                    
+            		    var s;
+                    for(var i = 0, len = jsonSort.length; i < len; i++) {
+                      s = jsonSort[i];
+                      
+                      if(s.direction === 'DESC') {
+                        sort[s.property] = -1; // desc or descending
+                      } else if(s.direction === 'ASC') {
+                        sort[s.property] = 1; // asc, or ascending
+                      } else {
+                        sort[s.property] = s.direction;
+                      }
+                    }
+                  
+                    return callback(false, sort);
+                  }
+                }
+                
+                return callback(false, sort);
+              }
+            };
+            Customer.paginate({ name: { $not: { $in: ['Customer 9', 'Customer 8'] } } }, options, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data[0].name).to.contain('7');
+      
+              done();
+            });
+          });
+        });
+        
+        describe('[options.select]', function() {
+          it('should only return the id property of the documents if not exists', function(done) {
+            Customer.paginate({ name: 'Customer 9' }, { select: 'xxxx' }, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data[0]).to.have.all.keys('_id');
+      
+              done();
+            });
+          });
+          
+          it('should return the selected properties if exists', function(done) {
+            Customer.paginate({ name: 'Customer 8' }, { select: 'name' }, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data[0]).to.have.all.keys('_id', 'name');
+      
+              done();
+            });
+          });
+          
+          it('should return the selected properties if is a function', function(done) {
+            var options = {
+              select: function(callback) {
+                  callback(false, 'deleted');
+              } 
+            };
+            Customer.paginate({ name: 'Customer 7' }, options, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data[0]).to.have.all.keys('_id', 'deleted');
+      
+              done();
+            });
+          });
+        });
+        
+        describe('[options.populate]', function() {
+          it('should return none populated property if not exists', function(done) {
+            Customer.paginate({ name: { $in: [ 'Customer 0', 'Customer 1' ] } }, { populate: 'notexist' }, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data[0].createdBy).to.not.contain.any.keys('username');
+      
+              done();
+            });
+          });
+          
+          it('should return the populated property if exists', function(done) {
+            Customer.paginate({ name: 'Customer 3' }, { populate: { path: 'createdBy', select: 'username' } }, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data[0].createdBy).to.contain.any.keys('username');
+      
+              done();
+            });
+          });
+          
+          it('should return the populated property if is a function', function(done) {
+            var options = {
+              populate: function(callback) {
+                  callback(false, { path: 'createdBy', select: 'username' });
+              } 
+            };
+            Customer.paginate({ name: 'Customer 9' }, options, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data[0].createdBy).to.contain.any.keys('username');
+      
+              done();
+            });
+          });
+        });
+        
+        describe('[options.maxLimit]', function() {
+          it('should return the documents with limited amount', function(done) {
+            Customer.paginate({ name: new RegExp('Cust', 'i') }, { maxLimit: 8 }, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data).to.have.length(8);
+              expect(result.total).to.equal(10);
+              expect(result.limit).to.equal(8);
+              expect(result.page).to.equal(1);
+              
+              done();
+            });
+          });
+        });
+        
+        describe('[options.limit]', function() {
+          it('should return the documents with limited amount (maxLimit undefined)', function(done) {
+            Customer.paginate({ deleted: false }, { limit: 3 }, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data).to.have.length(3);
+              expect(result.total).to.equal(5);
+              expect(result.limit).to.equal(3);
+              expect(result.page).to.equal(1);
+              
+              done();
+            });
+          });
+          
+          it('should return the documents with limited amount (limit <= maxLimit)', function(done) {
+            Customer.paginate({ deleted: false }, { maxLimit: 4, limit: 2 }, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data).to.have.length(2);
+              expect(result.total).to.equal(5);
+              expect(result.limit).to.equal(2);
+              expect(result.page).to.equal(1);
+              
+              done();
+            });
+          });
+          
+          it('should return the documents with limited amount (limit > maxLimit)', function(done) {
+            Customer.paginate({ deleted: true }, { maxLimit: 4, limit: 5 }, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data).to.have.length(4);
+              expect(result.total).to.equal(5);
+              expect(result.limit).to.equal(4);
+              expect(result.page).to.equal(1);
+              
+              done();
+            });
+          });
+        });
+        
+        describe('[options.page]', function() {
+          it('should return the documents of the first page', function(done) {
+            Customer.paginate({ deleted: false }, { page: 1, limit: 2, sort: 'name' }, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data).to.have.length(2);
+              expect(result.data[0].name).to.contain('1');
+              expect(result.data[1].name).to.contain('3');
+              expect(result.total).to.equal(5);
+              expect(result.limit).to.equal(2);
+              expect(result.page).to.equal(1);
+              
+              done();
+            });
+          });
+          
+          it('should return the documents of the next page', function(done) {
+            Customer.paginate({ deleted: false }, { page: 2, limit: 2, sort: 'name' }, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data).to.have.length(2);
+              expect(result.data[0].name).to.contain('5');
+              expect(result.data[1].name).to.contain('7');
+              expect(result.total).to.equal(5);
+              expect(result.limit).to.equal(2);
+              expect(result.page).to.equal(2);
+              
+              done();
+            });
+          });
+          
+          it('should return the documents of the last page', function(done) {
+            Customer.paginate({ deleted: false }, { page: 3, limit: 2, sort: 'name' }, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data).to.have.length(1);
+              expect(result.data[0].name).to.contain('9');
+              expect(result.total).to.equal(5);
+              expect(result.limit).to.equal(2);
+              expect(result.page).to.equal(3);
+              
+              done();
+            });
+          });
+        });
+        
+        describe('[options.lean]', function() {
+          it('should return the documents in plain object (lean<>false)', function(done) {
+            Customer.paginate({ deleted: true }, { lean: true }, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data[0]).to.not.be.instanceof(mongoose.Document);
+              
+              done();
+            });
+          });
+          
+          it('should return the documents in mongoose object (lean=false)', function(done) {
+            Customer.paginate({ deleted: false }, { lean: false }, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data[0]).to.be.instanceof(mongoose.Document);
+              
+              done();
+            });
+          });
         });
       });
     });
