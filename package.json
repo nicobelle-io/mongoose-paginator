@@ -4,7 +4,8 @@
   "description": "Pagination plugin for ORM Mongoose",
   "main": "index.js",
   "scripts": {
-    "test": "istanbul cover _mocha -- test/*.js -R spec -u bdd -s 30 -t 1000"
+    "test": "mocha test/*.js -R spec -u bdd -s 30 -t 1000",
+    "coverage": "istanbul cover _mocha" 
   },
   "repository": {
     "type": "git",
