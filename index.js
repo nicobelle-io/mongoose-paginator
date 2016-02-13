@@ -110,12 +110,9 @@ function buildFind(model, select, populate, criteria, page, limit, skip, sort, l
   var query = model
   .find(criteria)
   .select(select)
+  .populate(populate || '')
   .lean(lean)
   .skip(skip);
-  
-  if(populate) {
-    query.populate(populate);
-  }
   
   if(sort) {
     query.sort(sort);
