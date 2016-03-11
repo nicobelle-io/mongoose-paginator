@@ -1,11 +1,11 @@
 language: node_js
 node_js:
-  - "0.12"
+  - "4.1"
 services:
   - mongodb
 addons:
   code_climate:
-    repo_token: 9573d64ceb6d872605a6168709fad95cbe4664cc8b7c2f2e3fbad19975e38d84
+    repo_token: $CODECLIMATE_REPO_TOKEN
 script: npm run coverage
 after_script:
-  - codeclimate-test-reporter < lcov.info
+  - codeclimate-test-reporter < ./coverage/lcov.info

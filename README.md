@@ -3,6 +3,8 @@
 [![Build Status](https://travis-ci.org/raphaelfjesus/mongoose-paginator.svg?branch=master)](http://travis-ci.org/raphaelfjesus/mongoose-paginator)
 [![Code Climate](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator/badges/gpa.svg)](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator)
 [![Test Coverage](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator/badges/coverage.svg)](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator/coverage)
+[![Dependency Status](https://david-dm.org/raphaelfjesus/mongoose-paginator.svg)](https://david-dm.org/raphaelfjesus/mongoose-paginator)
+[![devDependency Status](https://david-dm.org/raphaelfjesus/mongoose-paginator/dev-status.svg)](https://david-dm.org/raphaelfjesus/mongoose-paginator#info=devDependencies)
 
 An pagination plugin for ORM [mongoose.js](http://mongoosejs.com/).
 

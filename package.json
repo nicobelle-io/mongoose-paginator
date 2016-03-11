@@ -4,8 +4,8 @@
   "description": "Pagination plugin for ORM Mongoose (easy to use, fast and no dependencies)",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test/*.js -R spec -u bdd -s 30 -t 1000",
-    "coverage": "istanbul cover _mocha"
+    "test": "mocha test/**/*.js",
+    "coverage": "istanbul cover _mocha -- -R spec ./test/**/*.js"
   },
   "repository": {
     "type": "git",
@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/raphaelfjesus/mongoose-paginator#readme",
   "engines": {
-    "node": ">=0.12.9"
+    "node": ">=4.1.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",

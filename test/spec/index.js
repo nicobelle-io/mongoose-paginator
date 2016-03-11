@@ -6,7 +6,7 @@
 var mongoose = require('mongoose');
 var chai = require('chai');
 var expect = chai.expect;
-var mongoosePaginator = require('../index');
+var mongoosePaginator = require('../../index');
 
 /**
  * Constants.
@@ -38,23 +38,7 @@ var CustomerSchema = new mongoose.Schema({
   }
 });
 
-var defaultOptions = {
-  select: '',
-  populate: '',
-  lean: true,
-  page: 1,
-  limit: 0,
-  maxLimit: 25,
-  criteriaWrapper: undefined,
-  convertCriteria: function(criteria, schema, callback) {
-    callback(false, criteria);
-  },
-  sorters: {},
-  convertSorters: function(sorters, callback) {
-    callback(false, sorters);
-  }
-};
-CustomerSchema.plugin(mongoosePaginator, {});
+CustomerSchema.plugin(mongoosePaginator);
 var Customer = mongoose.model('Customer', CustomerSchema);
 
 /**
@@ -96,6 +80,37 @@ describe('Paginator plugin for ORM Mongoose', function () {
   });
   
   describe('#paginate()', function() {
+    
+    it('should return an error when searching the total records', function(done) {
+      var CustomerCountErrorSchema = new mongoose.Schema({
+        name: String 
+      });
+      
+      CustomerCountErrorSchema.pre('count', function(next) {
+        next(new Error('Error while running count.'));
+      });
+
+      CustomerCountErrorSchema.plugin(mongoosePaginator);
+      var CustomerCountError = mongoose.model('CustomerCountError', CustomerCountErrorSchema);
+
+      CustomerCountError.paginate({}, function(err, result) {
+        expect(err).to.be.ok;
+        
+        done();
+      });
+    });
+    
+    it('should return an empty object when not found', function(done) {
+      Customer.paginate({ name: 'not found' }, function(err, result) {
+        expect(result).to.exist;
+        expect(result.data).to.be.empty;
+        expect(result.total).to.equal(0);
+        expect(result.limit).to.equal(0);
+        expect(result.page).to.equal(1);
+        
+        done();
+      });
+    });
     
     describe('parameter [criteria]', function() {
       
@@ -140,7 +155,7 @@ describe('Paginator plugin for ORM Mongoose', function () {
       
       describe('when not present', function() {
         it('should not throw or return an error', function(done) {
-          Customer.paginate({ deleted: true }, {}, function(err, result) {
+          Customer.paginate({ deleted: true }, undefined, function(err, result) {
             expect(err).to.not.be.ok;
             
             done();
@@ -163,20 +178,12 @@ describe('Paginator plugin for ORM Mongoose', function () {
       describe('when present', function() {
 
         describe('[options.criteriaWrapper]', function() {
-          it('should throw exception if is not a function', function(done) {
-            Customer.paginate({ name: { $in: ['Customer 0', 'Customer 2', 'Customer 4', 'Customer 5', 'Customer 7' ] }, deleted: true }, { criteriaWrapper: 'not function' }, function(err, result) {
-              expect(err).to.exist;
-      
-              done();
-            });
-          });
-          
           it('should execute without problems if is a function', function(done) {
             var options = {
-              criteriaWrapper: function(criteria, callback) {
+              criteriaWrapper: function(criteria) {
                 criteria.deleted = false;
                 
-                callback(false, criteria);
+                return criteria;
               }
             };
             Customer.paginate({ name: { $in: ['Customer 0', 'Customer 2', 'Customer 5', 'Customer 7', 'Customer 8' ] }}, options, function(err, result) {
@@ -190,16 +197,13 @@ describe('Paginator plugin for ORM Mongoose', function () {
         
         describe('[options.convertCriteria]', function() {
           it('should throw exception if is not a function', function(done) {
-            Customer.paginate({ name: 'Customer 4' }, { convertCriteria: 'not function' }, function(err, result) {
-              expect(err).to.exist;
-      
-              done();
-            });
+            // TODO
+            done();
           });
           
           it('should convert without problems if is a function', function(done) {
             var options = {
-              convertCriteria: function(criteria, schema, callback) {
+              convertCriteria: function(criteria, schema) {
                 if(criteria && typeof criteria === 'string') {
                   var filters = JSON.parse(criteria);
                   
@@ -225,7 +229,7 @@ describe('Paginator plugin for ORM Mongoose', function () {
                   }
                 }
                   
-                return callback(false, criteria);
+                return criteria;
               }
             };
             Customer.paginate('[{"property":"name", "operator":"like", "value":"3"}]', options, function(err, result) {
@@ -255,35 +259,18 @@ describe('Paginator plugin for ORM Mongoose', function () {
               done();
             });
           });
-          
-          it('should return the documents sorted if is a function', function(done) {
-            var options = {
-              sort: function(callback) {
-                  callback(false, { name: 'desc' });
-              } 
-            };
-            Customer.paginate({ deleted: true }, options, function(err, result) {
-              expect(result).to.exist;
-              expect(result.data[0].name).to.contain('8');
-      
-              done();
-            });
-          });
         });
         
         describe('[options.convertSort]', function() {
           it('should throw exception if is not a function', function(done) {
-            Customer.paginate({ name: { $not: { $in: ['Customer 9', 'Customer 8'] } } }, { convertSort: 'not function' }, function(err, result) {
-              expect(err).to.exist;
-      
-              done();
-            });
+            // TODO
+            done();
           });
           
           it('should convert without problems if is a function', function(done) {
             var options = {
               sort: '[{"property": "name", "direction": "DESC"}]',
-              convertSort: function(sort, schema, callback) {
+              convertSort: function(sort, schema) {
                 if(sort && typeof sort === 'string') {
                   var jsonSort = JSON.parse(sort);
                   
@@ -305,7 +292,7 @@ describe('Paginator plugin for ORM Mongoose', function () {
                   }
                 }
                 
-                return callback(false, sort);
+                return sort;
               }
             };
             Customer.paginate({ name: { $not: { $in: ['Customer 9', 'Customer 8'] } } }, options, function(err, result) {
@@ -338,8 +325,8 @@ describe('Paginator plugin for ORM Mongoose', function () {
           
           it('should return the selected properties if is a function', function(done) {
             var options = {
-              select: function(callback) {
-                  callback(false, 'deleted');
+              select: function() {
+                  return 'deleted';
               } 
             };
             Customer.paginate({ name: 'Customer 7' }, options, function(err, result) {
@@ -372,8 +359,8 @@ describe('Paginator plugin for ORM Mongoose', function () {
           
           it('should return the populated property if is a function', function(done) {
             var options = {
-              populate: function(callback) {
-                  callback(false, { path: 'createdBy', select: 'username' });
+              populate: function() {
+                  return { path: 'createdBy', select: 'username' };
               } 
             };
             Customer.paginate({ name: 'Customer 9' }, options, function(err, result) {
@@ -430,6 +417,18 @@ describe('Paginator plugin for ORM Mongoose', function () {
               expect(result.data).to.have.length(4);
               expect(result.total).to.equal(5);
               expect(result.limit).to.equal(4);
+              expect(result.page).to.equal(1);
+              
+              done();
+            });
+          });
+          
+          it('should return the documents with limited amount if is a function', function(done) {
+            Customer.paginate({ deleted: false }, { limit: function(maxLimit) { return 3; } }, function(err, result) {
+              expect(result).to.exist;
+              expect(result.data).to.have.length(3);
+              expect(result.total).to.equal(5);
+              expect(result.limit).to.equal(3);
               expect(result.page).to.equal(1);
               
               done();
