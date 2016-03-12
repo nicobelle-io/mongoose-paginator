@@ -4,7 +4,6 @@ module.exports = function(schema, schemaOptions) {
   
   schema.static('paginate', function(criteria, options, callback) {
   	var self = this;
-  	
   	var callback = options && typeof options === 'function' ? options : callback;
   	
   	var o = buildOptions(options, schemaOptions);

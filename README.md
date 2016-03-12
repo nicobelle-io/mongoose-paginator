@@ -1,12 +1,14 @@
-# mongoose-paginator-simple
+# mongoose-paginator
 
 [![Build Status](https://travis-ci.org/raphaelfjesus/mongoose-paginator.svg?branch=master)](http://travis-ci.org/raphaelfjesus/mongoose-paginator)
 [![Code Climate](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator/badges/gpa.svg)](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator)
 [![Test Coverage](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator/badges/coverage.svg)](https://codeclimate.com/github/raphaelfjesus/mongoose-paginator/coverage)
-[![Dependency Status](https://david-dm.org/raphaelfjesus/mongoose-paginator.svg)](https://david-dm.org/raphaelfjesus/mongoose-paginator)
-[![devDependency Status](https://david-dm.org/raphaelfjesus/mongoose-paginator/dev-status.svg)](https://david-dm.org/raphaelfjesus/mongoose-paginator#info=devDependencies)
 
 An pagination plugin for ORM [mongoose.js](http://mongoosejs.com/).
+
+## Requirements
+
+ - [NodeJS](https://nodejs.org/en/) >= 4.1
 
 ## Installation
 
@@ -24,251 +26,76 @@ var mongoosePaginator = require('mongoose-paginator-simple');
 var schema = new mongoose.Schema({ /* definition */ });
 schema.plugin(mongoosePaginator, { /* options for apply in all queries paging */ });
 
-module.exports = mongoose.model('Model', schema);
+module.exports = mongoose.model('YourModel', schema);
 
 // controller.js
-var Model = mongoose.model('ModelName');
+var YourModel = mongoose.model('YourModel');
 
-Model.paginate({ /* criteria */ }, { /* options for its use */ }, function(err, result) {
+/*
+ * Using callback
+ */
+YourModel.paginate([criteria], [options], function(err, result) {
   console.log(result);
-  /*{ 
-    total: <Number>, 
-    limit: <Number>, 
-    page: <Number>,
-    data: [<Document>] 
-  }*/
 });
-```
-
-### Paginate Criteria
-####`criteria` _<[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)> mongodb selector_
-
-The [criteria](http://mongoosejs.com/docs/api.html#query_Query-find) can be used to filter the documents. **Default value:** *undefined*
-
-```javascript
-Model.paginate({ pathName: 'value' }, [option], [callback]);
 
 // or 
 
-Model.paginate({ pathName: 'value' }, [callback]);
-```
-
-### Paginate Options
-####`criteriaWrapper`_<[function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)>_
-
-The `criteriaWrapper` option can be used to specify a criteria wrapper, adding criteria common to all queries paging. **Default value:** *undefined*
-
-```javascript
-// Set as default option for model
-schema.plugin(mongoosePaginator, {
-  criteria: { pathName: 'value' }, 
-  criteriaWrapper: function(criteria, callback) {
-    // criteria output here: { pathName: 'value' }
-    
-    criteria.pathName2 = 'otherValue';
-    // criteria output here: { pathName: 'value', pathName2: 'otherValue' }
-    
-    return callback(false, criteria);
-  }
+YourModel.paginate([criteria], function(err, result) {
+  console.log(result);
 });
-```
 
-####`convertCriteria`_<[function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)>_
-
-The `convertCriteria` option can be used to specify a criteria converter.
-
-```javascript
-// Set as default option for model
-schema.plugin(mongoosePaginator, {
-  
-  // From request. Syntax of the Sencha ExtJS framework (front-end)
-  criteria: '[{"property":"pathName", "operator":"like", "value":"v"}]', 
-  
-  convertCriteria: function(criteria, schema, callback) {
-    // criteria output here: [{"property":"pathName", "operator":"like", "value":"v"}]
-    
-    if(criteria && typeof criteria === 'string') {
-      var filters = JSON.parse(criteria);
-      
-      if(Array.isArray(filters)) {
-        var filter;
-        criteria = {};
-        
-        for(var i = 0, len = filters.length; i < len; i++) {
-          filter = filters[i];
-          
-          // ignore not paths mongoose
-          if(!schema.path(filter.property)) {
-            continue;
-          }
-          
-          if('like' === filter.operator) {
-            criteria[filter.property] = new RegExp(filter.value, 'i');
-          
-          } else {
-            criteria[filter.property] = filter.value;
-          }
-        }
-        
-        // criteria output here: { pathName: new RegExp('v', 'i') }
-      }
-    }
-      
-    return callback(false, criteria);
-  }
-});
-```
-
-####`sort` _<[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String) | [Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object) | [function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)>_
-
-The [sort](http://mongoosejs.com/docs/api.html#query_Query-sort) option can be used to specify the sort order. **Default value:** *undefined*
-
-```javascript
-// Set as default option for model
-schema.plugin(mongoosePaginator, {
-  sort: { pathName: 1 } // 1 = ASC e -1 = DESC
+/*
+ * Using native promise (ECMAScript 6)
+ */
+YourModel.paginate([criteria], [options]).then(function(result) {
+  console.log(result);
+}, function(err) {
+  // ...
 });
 
 // or
 
-// Overrides the select option set as default only for this execution
-Model.paginate([criteria], { sort: 'pathName1 -pathName2' }, [callback]);
-```
-
-####`convertSort` _<[function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)>_
-
-The `convertSort` option can be used to specify a sort converter.
-
-```javascript
-// Set as default option for model
-schema.plugin(mongoosePaginator, {
-  // From request. Syntax of the Sencha ExtJS framework (front-end)
-  sort: '[{"property": "pathName", "direction": "DESC"}]',
-  
-  convertSort: function(sort, callback) {
-    if(sort && typeof sort === 'string') {
-      var jsonSort = JSON.parse(sort);
-      
-      if(Array.isArray(jsonSort)) {
-        sort = {};
-        
-        var s;
-        for(var i = 0, len = jsonSort.length; i < len; i++) {
-          s = jsonSort[i];
-          
-          if(s.direction === 'DESC') {
-            sort[s.property] = -1; // desc or descending
-          } else if(s.direction === 'ASC') {
-            sort[s.property] = 1; // asc, or ascending
-          } else {
-            sort[s.property] = s.direction;
-          }
-        }
-      }
-    }
-    
-    return callback(false, sort);
-  }
+YourModel.paginate([criteria]).then(function(result) {
+  console.log(result);
+}, function(err) {
+  // ...
 });
 ```
 
-####`select` _<[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String) | [Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)>_
-
-The [select](http://mongoosejs.com/docs/api.html#query_Query-select) option can be used to specify which document fields to include or exclude (also known as the query "projection"). **Default value:** *''*
-
+Output will be:
 ```javascript
-// Set as default option for model
-schema.plugin(mongoosePaginator, {
-  select: 'pathName1 pathName2' 
-});
-
-// or
-
-// Overrides the select option set as default only for this execution
-Model.paginate([criteria], { select: 'pathName3' }, [callback]);
+/*
+{
+  total: <Number>, 
+  limit: <Number>,
+  page: <Number>,
+  data: <Document...N>
+}
+*/
 ```
 
-####`populate` _<[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String) | [Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)>_
+## Configuration
 
-The [populate](http://mongoosejs.com/docs/api.html#query_Query-populate) option can be used to specify paths which should be populated with other documents. **Default value:** *undefined*
+Below is a complete listing of all default configuration options.
 
-```javascript
-// Set as default option for model
-schema.plugin(mongoosePaginator, {
-  populate: { path: 'modelRef', select: 'pathName' } 
-});
+**Existing in mongoose**
 
-// or
+- The [criteria](http://mongoosejs.com/docs/api.html#query_Query-find) can be used to filter the documents.
+- The [sort](http://mongoosejs.com/docs/api.html#query_Query-sort) option can be used to specify the sort order.
+- The [select](http://mongoosejs.com/docs/api.html#query_Query-select) option can be used to specify which document fields to include or exclude (also known as the query "projection").
+- The [populate](http://mongoosejs.com/docs/api.html#query_Query-populate) option can be used to specify paths which should be populated with other documents.
+- The [limit](http://mongoosejs.com/docs/api.html#query_Query-limit) option can be used to specify the maximum number of documents the query will return.
+- The page option can be used to specify number of the page that will be used to calculate the number of documents to [skip](http://mongoosejs.com/docs/api.html#query_Query-skip).
+- The [lean](http://mongoosejs.com/docs/api.html#query_Query-lean) option can be used to specify the lean option. **Default value:** *true*
 
-// Overrides the select option set as default only for this execution
-Model.paginate([criteria], { populate: 'pathName2' }, [callback]);
-```
+> **NOTE:** According Mongoose Docs, the lean option has a high-performance read-only scenarios when true.
 
-####`limit` _<[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)>_
+**Additional options**
 
-The [limit](http://mongoosejs.com/docs/api.html#query_Query-limit) option can be used to specify the maximum number of documents the query will return. **Default value:** *undefined*
-
-```javascript
-// Set as default option for model
-schema.plugin(mongoosePaginator, {
-  limit: 20 
-});
-
-// or
-
-// Overrides the select option set as default only for this execution
-Model.paginate([criteria], { limit: 10 }, [callback]);
-```
-
-####`maxLimit` _<[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)>_
-
-The `maxLimit` option can be used to specify the maximum number of documents the query will return, when the `limit` option is setted from request, preventing overloading the application server with excessive use of memory. **Default value:** *undefined*
-
-```javascript
-// Set as default option for model
-schema.plugin(mongoosePaginator, {
-  maxLimit: 100  
-});
-
-// or
-
-// Overrides the select option set as default only for this execution
-Model.paginate([criteria], { maxLimit: 50 }, [callback]);
-```
-
-####`page` _<[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)>_
-
-The page option can be used to specify number of the page that will be used to calculate the number of documents to [skip](http://mongoosejs.com/docs/api.html#query_Query-skip). **Default value:** *1*
-
-```javascript
-// Set as default option for model
-schema.plugin(mongoosePaginator, {
-  page: 1 
-});
-
-// or
-
-// Overrides the select option set as default only for this execution
-Model.paginate([criteria], { page: 2 }, [callback]);
-```
-
-####`lean` _<[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)>_
-
-The [lean](http://mongoosejs.com/docs/api.html#query_Query-lean) option can be used to specify the lean option. **Default value:** *true*
-
-```javascript
-// Set as default option for model
-schema.plugin(mongoosePaginator, {
-  lean: true 
-});
-
-// or
-
-// Overrides the select option set as default only for this execution
-Model.paginate([criteria], { lean: false }, [callback]);
-```
-
-> **NOTE:** According Mongoose Docs, this is a great option in high-performance read-only scenarios.
+- The `maxLimit` option can be used to specify the maximum number of documents the query will return, when the `limit` option is setted from request, preventing overloading the application server with excessive use of memory.
+- The `convertCriteria` option can be used to specify a criteria converter.
+- The `criteriaWrapper` option can be used to specify a criteria wrapper, adding criteria common to all queries paging.
+- The `convertSort` option can be used to specify a sort converter.
 
 ## Examples
 
@@ -303,21 +130,20 @@ var schema = new mongoose.Schema({
   }
 });
 
-// Registering the plugin
 schema.plugin(mongoosePaginator, {
   maxLimit: 25,
-  criteriaWrapper: function(criteria, callback) {
+  criteriaWrapper: function(criteria) {
     criteria.deleted = false; // Exclusion logic documents
-    return callback(false, criteria);
+    return criteria;
   },
-  convertCriteria: function(criteria, schema, callback) {
+  convertCriteria: function(criteria, schema) {
     if(criteria && criteria.name) {
       criteria.name = new RegExp(criteria.name, 'i'); // Apply like
     }
 
-    return callback(false, criteria);
+    return criteria;
   },
-  convertSort: function(sort, callback) {
+  convertSort: function(sort, schema) {
     if(sort) {
       for(var key in sort) {
         if('DESC' === sort[key]) {
@@ -328,7 +154,7 @@ schema.plugin(mongoosePaginator, {
       }
     }
     
-    return callback(false, sort);
+    return sort;
   }
 }); 
 
@@ -363,16 +189,13 @@ var allCostumers = [
 var mongoose = require('mongoose');
 var Customer = mongoose.model('Customer');
 
-var criteria = {};
-var options = {};
-
-Customer.paginate(criteria, options, function(err, result) {
+Customer.paginate({}, function(err, result) {
   console.log(result);
 });
 
 // or
 
-Customer.paginate(criteria, function(err, result) {
+Customer.paginate({}).then(function(result) {
   console.log(result);
 });
 ```
@@ -381,8 +204,8 @@ Output will be:
 ```javascript
 {
   total: 5, 
-  page: 1,
   limit: 25,
+  page: 1,
   data: [
     { _id: '<ObjectId>', name: 'Customer 1', deleted: false, createdBy: '<ObjectId>' },
     { _id: '<ObjectId>', name: 'Customer 3', deleted: false, createdBy: '<ObjectId>' },
@@ -403,14 +226,20 @@ var Customer = mongoose.model('Customer');
 Customer.paginate({ name: 'Customer 5' }, function(err, result) {
   console.log(result);
 });
+
+// or
+
+Customer.paginate({ name: 'Customer 5' }).then(function(result) {
+  console.log(result);
+});
 ```
 
 Output will be:
 ```javascript
 {
   total: 1, 
-  page: 1,
   limit: 25,
+  page: 1,
   data: [
     { _id: '<ObjectId>', name: 'Customer 5', deleted: false, createdBy: '<ObjectId>' } 
   ]
@@ -442,14 +271,20 @@ var options = {
 Customer.paginate(criteria, options, function(err, result) {
   console.log(result);
 });
+
+// or
+
+Customer.paginate(criteria, options).then(function(result) {
+  console.log(result);
+});
 ```
 
 Output will be:
 ```javascript
 {
   total: 5,
-  page: 1,
   limit: 25,
+  page: 1,
   data: [
     {  _id: '<ObjectId>', name: 'Customer 9', createdBy: { username: 'test' } },
     {  _id: '<ObjectId>', name: 'Customer 7', createdBy: { username: 'test' } },
@@ -479,4 +314,24 @@ $ npm test
 
 ## License
 
-[MIT](LICENSE)
+The MIT License (MIT)
+
+Copyright (c) 2016 Raphael F. Jesus <raphaelfjesus@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
