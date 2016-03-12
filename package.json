@@ -1,6 +1,6 @@
 {
   "name": "mongoose-paginator-simple",
-  "version": "2.0.0",
+  "version": "2.0.0", 
   "description": "Pagination plugin for ORM Mongoose (easy to use, fast, no dependencies and less than 45 lines of code)",
   "main": "index.js",
   "scripts": {
