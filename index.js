@@ -52,9 +52,10 @@ function buildOptions(options, schemaOptions) {
 	o.populate = o.populate && typeof o.populate === 'function' ? o.populate() : (o.populate || '');
 	
 	// Advanced options
+	var convert = (converter) => { return converter && typeof converter === 'function' ? converter : function (value, schema) { return value; }; };
+	o.convertSort = convert(o.convertSort);
+	o.convertCriteria = convert(o.convertCriteria);
 	o.criteriaWrapper = o.criteriaWrapper && typeof o.criteriaWrapper === 'function' ? o.criteriaWrapper : function (criteria) { return criteria; };
-	o.convertCriteria = o.convertCriteria && typeof o.convertCriteria === 'function' ? o.convertCriteria : function (criteria, schema) { return criteria; };
-	o.convertSort = o.convertSort && typeof o.convertSort === 'function' ? o.convertSort : function (sort, schema) { return sort; };
 	
 	return o;
 }
