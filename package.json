@@ -12,18 +12,10 @@
     "url": "git+https://github.com/raphaelfjesus/mongoose-paginator.git"
   },
   "keywords": [
-    "mongoose",
-    "mongodb",
-    "pagination",
-    "paginate",
-    "paging",
-    "page",
-    "sort",
-    "limit",
-    "plugin",
-    "mongoose-paginator",
-    "mongoose-pagainte",
-    "mongoose-pager"
+    "mongoose","mongodb", "mongo", 
+    "mongoose-paginator", "mongoose-paginate", "mongoose-pager",
+    "pagination", "paginate", "paginator", "paging", "page", 
+    "sort", "limit", "skip", "offset", "criteria", "query", "plugin" 
   ],
   "author": "Raphael F. Jesus <raphaelfjesus@gmail.com>",
   "license": "MIT",
